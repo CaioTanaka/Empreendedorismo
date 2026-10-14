@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClearTrace — protótipo</title>
+<style>
+:root{--bg:#e9eef3;--surface:#fff;--ink:#14212e;--mute:#566574;--line:#d3dce5;--brand:#0f766e;--brand-ink:#fff;--chrome:#dfe5eb;--red:#b42318;--amber:#a15c07;--green:#157347;--redbg:#fde8e6;--ambbg:#fdf0d9;--grnbg:#e1f3e8;--sk:#e5eaef;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1620;--surface:#16222f;--ink:#e8eef4;--mute:#9db0c1;--line:#2a3a4b;--brand:#2dd4bf;--brand-ink:#06201d;--chrome:#1d2b3a;--red:#ff8a7e;--amber:#f5b74f;--green:#6fd49a;--redbg:#3a1f1d;--ambbg:#3a2c14;--grnbg:#16301f;--sk:#223344}}
+:root[data-theme="dark"]{--bg:#0d1620;--surface:#16222f;--ink:#e8eef4;--mute:#9db0c1;--line:#2a3a4b;--brand:#2dd4bf;--brand-ink:#06201d;--chrome:#1d2b3a;--red:#ff8a7e;--amber:#f5b74f;--green:#6fd49a;--redbg:#3a1f1d;--ambbg:#3a2c14;--grnbg:#16301f;--sk:#223344}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 16px;max-width:70ch}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.pick button{font:inherit;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.pick button[aria-pressed=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.steps{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 12px;padding:0;list-style:none;color:var(--mute);font-size:14px}
+.steps li{display:flex;gap:6px;align-items:center}
+.steps li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--line)}
+.steps li.on{color:var(--ink);font-weight:600}.steps li.on::before{background:var(--brand)}
+.frame{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.bar{display:flex;align-items:center;gap:10px;background:var(--chrome);padding:8px 12px}
+.dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.url{flex:1;min-width:0;background:var(--surface);border-radius:999px;padding:5px 14px;font-size:14px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ext{position:relative;width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;color:var(--ink)}
+#badge{position:absolute;right:-6px;top:-7px;min-width:20px;height:20px;border-radius:10px;font-size:12px;font-weight:700;display:grid;place-items:center;padding:0 5px;background:var(--mute);color:#fff}
+#badge.r{background:#b42318}#badge.y{background:#a15c07}#badge.g{background:#157347}
+.view{display:grid;grid-template-columns:1fr;position:relative;min-height:520px}
+.view.open{grid-template-columns:1fr 390px}
+.page{padding:20px 20px 110px;position:relative;overflow:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;font-weight:700;font-size:20px}.sh .tag{font-size:13px;font-weight:400;color:var(--mute)}
+.av{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.post{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}.post .w2{display:flex;gap:10px;align-items:center;margin-bottom:6px}.post p{margin:0 0 6px;font-size:15px}.post small{color:var(--mute)}
+.bal{border-radius:12px;padding:16px;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff}.bal small{opacity:.85}.bal b{display:block;font-size:30px}
+.acts{display:flex;gap:10px;margin:12px 0}.acts span{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.row .neg{color:var(--red)}.row .pos{color:var(--green)}
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.prod{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px}.prod i{display:block;height:70px;border-radius:8px;margin-bottom:8px}.prod b{display:block}.prod u{text-decoration:none;color:#fff;background:#2563eb;border-radius:6px;padding:3px 10px;display:inline-block;margin-top:6px;font-size:13px}
+.promo{border-radius:10px;padding:14px;background:#fde68a;color:#3b2a00;font-weight:700;margin-bottom:12px}
+.sk{height:14px;border-radius:6px;background:var(--sk);margin:10px 0}
+.hero{height:130px;border-radius:10px;background:var(--sk);margin:12px 0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.cards div{height:80px;border-radius:8px;background:var(--sk)}
+.sitename{font-weight:700;font-size:20px}
+.cookie{position:absolute;left:20px;right:20px;bottom:16px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px}
+.cookie p{margin:0;flex:1;min-width:200px}
+.cookie .big{background:#2563eb;color:#fff;border:0;border-radius:6px;padding:8px 18px;font:inherit;font-weight:600}
+.cookie .tiny{background:none;border:0;color:var(--mute);font-size:12px;text-decoration:underline;padding:0}
+#toast{position:absolute;right:16px;top:16px;width:min(340px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--mute);border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(-12px);opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;z-index:3}
+#toast.show{cursor:pointer;transform:none;opacity:1;pointer-events:auto}
+#toast.r{border-left-color:var(--red)}#toast.y{border-left-color:var(--amber)}#toast.g{border-left-color:var(--green)}
+#toast .t{font-size:13px;color:var(--mute);margin:0}#toast .m{font-weight:600;margin:2px 0 8px}
+#toast button{font:inherit;font-size:14px;border-radius:6px;padding:5px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin-right:6px}
+.panel{border-left:1px solid var(--line);background:var(--surface);padding:16px;display:none;overflow:auto;max-height:640px}
+.view.open .panel{display:block}
+.panel h2{font-size:18px;margin:0 0 2px}.panel h3{font-size:15px;margin:18px 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px}
+.chip.r{background:var(--redbg);color:var(--red)}.chip.y{background:var(--ambbg);color:var(--amber)}.chip.g{background:var(--grnbg);color:var(--green)}
+details{border:1px solid var(--line);border-radius:8px;margin:6px 0;padding:0 10px}
+summary{cursor:pointer;padding:9px 0;display:flex;gap:8px;align-items:center;list-style:none}
+summary::-webkit-details-marker{display:none}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}.dot.r{background:var(--red)}.dot.y{background:var(--amber)}.dot.g{background:var(--green)}
+summary b{flex:1}summary small{color:var(--mute);display:block;font-weight:400}
+.q{font-size:14px;color:var(--mute);border-left:3px solid var(--line);padding-left:10px;margin:4px 0 8px}
+.plain{font-size:14px;margin:0 0 10px}.plain b{color:var(--brand)}
+.lg{font-size:14px;display:flex;gap:8px;margin:5px 0}.lg span{flex:none;font-weight:700;width:18px}
+.lg .ok{color:var(--green)}.lg .warn{color:var(--amber)}.lg .bad{color:var(--red)}
+.note{font-size:13px;color:var(--mute);margin-top:8px}
+.foot{margin-top:12px;font-size:13px;color:var(--mute)}
+.sw{display:inline-flex;gap:8px;align-items:center;margin:0 0 12px;font-size:14px;color:var(--mute)}.sw input{width:18px;height:18px;accent-color:var(--brand)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:8px 0 12px}
+.tabs button{font:inherit;font-size:14px;background:none;border:0;border-bottom:3px solid transparent;padding:6px 8px;color:var(--mute);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--brand);font-weight:600}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0}
+.box ul{margin:6px 0 12px;padding-left:18px;font-size:14px}
+.btn{font:inherit;font-size:14px;font-weight:600;background:var(--brand);color:var(--brand-ink);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;margin:6px 6px 6px 0}.btn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.tabs button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.lbl{display:block;font-size:14px;font-weight:600;margin:10px 0}.lbl input,.lbl select,.lbl textarea{display:block;width:100%;font:inherit;font-size:14px;font-weight:400;margin-top:4px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:6px 10px}legend{font-size:14px;font-weight:600;padding:0 4px}
+.ck{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0}.ck input{width:16px;height:16px;accent-color:var(--brand)}
+.chg{border-left:4px solid var(--amber);padding:4px 10px;margin:8px 0;font-size:14px}
+.fl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}.flow ul{list-style:none;padding:0;margin:8px 0 0}.flow li{display:flex;gap:8px;align-items:baseline;font-size:14px;margin:4px 0}.flow .dot{display:inline-block;width:10px;height:10px;margin-top:2px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;z-index:10}.modal[hidden]{display:none}
+.mbox{background:var(--surface);color:var(--ink);border-radius:12px;max-width:440px;width:100%;padding:20px;max-height:90vh;overflow:auto}.mbox h2{margin:0 0 8px;font-size:20px}.mbox ul{padding-left:18px;margin:8px 0}
+.tabs .pbtn{margin-left:auto;align-self:center;position:relative;width:34px;height:34px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--ink)}
+.tabs .pbtn[aria-selected=true]{border-color:var(--brand);color:var(--brand)}
+.pbtn.todo::after{content:"";position:absolute;right:-1px;top:-1px;width:10px;height:10px;border-radius:50%;background:var(--amber);border:2px solid var(--surface)}
+.who{font-size:14px;margin:6px 0 10px}.who a{color:var(--brand);background:none;border:0;font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+details.adj{margin:8px 0}details.adj summary{font-size:14px;font-weight:600;padding:8px 0}
+@media (max-width:860px){.view.open{grid-template-columns:1fr}.panel{border-left:0;border-top:1px solid var(--line);max-height:none}.cards{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>ClearTrace — protótipo da extensão</h1>
+<p class="sub">Escolha um site de exemplo. Repare que você não clica em nada para o ClearTrace funcionar: o alerta aparece sozinho. Ative “Simular plano Pro” para ver as funções pagas. Sites e dados desta simulação são fictícios.</p>
+<div class="pick" id="pick" role="group" aria-label="Site de exemplo"></div>
+<label class="sw"><input type="checkbox" id="pro"> Simular plano Pro</label>
+<ol class="steps" id="steps">
+<li>Você abre o site</li><li>O ClearTrace lê em segundo plano</li><li>O alerta aparece sozinho</li><li>Detalhes, só se você quiser</li>
+</ol>
+<div class="frame">
+<div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="url"></div>
+<button id="ext" aria-label="Abrir painel do ClearTrace"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span id="badge">…</span></button></div>
+<div class="view" id="view">
+<div class="page" id="page">
+<div id="pg"></div>
+<div class="cookie"><p>Usamos cookies para melhorar sua experiência e personalizar anúncios.</p><button class="big" type="button">Aceitar todos</button><button class="tiny" type="button">Gerenciar preferências</button></div>
+<div id="toast" role="status" aria-live="polite"><p class="t">ClearTrace</p><p class="m" id="tmsg"></p><button type="button" id="tmore">Ver detalhes</button><button type="button" id="tclose">Fechar</button></div>
+</div>
+<aside class="panel" id="panel" aria-label="Painel transparente do ClearTrace"></aside>
+</div>
+</div>
+<p class="foot">Protótipo navegável para demonstração. A checagem da LGPD é uma estimativa automática, não um veredito jurídico.</p>
+</main>
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox" role="dialog" aria-modal="true" aria-labelledby="mt"></div></div>
+<script>
+var LV={r:"Venda a terceiros",y:"Compartilha com parceiros",g:"Uso interno"};
+var SITES=[
+{id:"s",name:"Rede social (exemplo)",url:"https://redesocial-exemplo.com.br",alert:"Este site compartilha sua localização com 8 parceiros",
+cats:[
+{n:"Localização",r:"y",d:"Compartilhada com 8 parceiros de publicidade",o:"Poderemos compartilhar dados de geolocalização com parceiros comerciais para fins de personalização de serviços e comunicações.",p:"Seu local aproximado vai para empresas parceiras que usam isso para escolher anúncios para você."},
+{n:"Navegação e interesses",r:"r",d:"Vendidos a terceiros",o:"Os dados de uso poderão ser cedidos a terceiros mediante contrapartida, nos termos da legislação aplicável.",p:"O que você vê e clica pode ser vendido a outras empresas."},
+{n:"Contatos",r:"y",d:"Compartilhados com parceiros",o:"Informações de contatos sincronizados poderão ser tratadas em conjunto com empresas do grupo e parceiros.",p:"Sua lista de contatos pode ser usada por empresas parceiras."},
+{n:"Dados financeiros",r:"g",d:"Não coletados",o:"Não coletamos dados de pagamento neste serviço.",p:"Este site não pede nem guarda dados de cartão ou conta."}],
+lg:[["warn","Base legal declarada","Cita “legítimo interesse” sem explicar"],["bad","Finalidade específica","Finalidades vagas, como “melhorar a experiência”"],["ok","Canal para exercer direitos","Há um canal de contato do encarregado"]]},
+{id:"b",name:"Banco (exemplo)",url:"https://banco-exemplo.com.br",alert:"Este site usa seus dados financeiros só para operar a sua conta",
+cats:[
+{n:"Dados financeiros",r:"g",d:"Uso interno para operar a conta",o:"Os dados são tratados para execução do contrato e cumprimento de obrigação legal ou regulatória.",p:"Seus dados de conta são usados para o banco funcionar e cumprir a lei."},
+{n:"Localização",r:"g",d:"Uso interno, contra fraudes",o:"A geolocalização é utilizada para prevenção a fraudes.",p:"Seu local serve para o banco notar compras suspeitas."},
+{n:"Marketing",r:"y",d:"Compartilhado com empresas do grupo",o:"Poderemos oferecer produtos de empresas do conglomerado, salvo oposição do titular.",p:"Empresas do mesmo grupo podem te oferecer produtos, a não ser que você recuse."}],
+lg:[["ok","Base legal declarada","Execução de contrato e obrigação legal"],["ok","Finalidade específica","Finalidades separadas por tipo de dado"],["warn","Canal para exercer direitos","Canal existe, mas está no fim do texto"]]},
+{id:"l",name:"Loja online (exemplo)",url:"https://loja-exemplo.com.br",alert:"Este site compartilha seu e-mail com 12 parceiros",
+cats:[
+{n:"E-mail",r:"y",d:"Compartilhado com 12 parceiros",o:"O endereço eletrônico poderá ser compartilhado com parceiros para ações promocionais.",p:"Seu e-mail pode ser passado para até 12 empresas que vão te mandar ofertas."},
+{n:"Histórico de compras",r:"y",d:"Usado para perfil de consumo",o:"Dados transacionais alimentam modelos de recomendação e segmentação.",p:"O que você compra é usado para montar seu perfil e escolher o que mostrar."},
+{n:"Dados de pagamento",r:"g",d:"Uso interno, para cobrar",o:"Os dados de pagamento são tratados por processador contratado exclusivamente para a cobrança.",p:"Os dados do cartão servem só para processar o pagamento."}],
+lg:[["warn","Base legal declarada","Consentimento pedido junto ao aceite dos termos"],["warn","Finalidade específica","Finalidade de marketing misturada com a de entrega"],["ok","Canal para exercer direitos","Formulário de solicitação disponível"]]}];
+var PAGES={
+s:"<div class='sh'>Conecta+ <span class='tag'>Início · Amigos · Mensagens</span></div><div class='post'><div class='w2'><div class='av' style='background:#7c3aed'>AL</div><div><b>Ana Lima</b><br><small>há 12 min · Curitiba</small></div></div><p>Primeiro dia de trilha na Serra do Mar! Quem quer ir no próximo fim de semana?</p><small>48 curtidas · 6 comentários</small></div><div class='post'><div class='w2'><div class='av' style='background:#0f766e'>RS</div><div><b>Rafael Souza</b><br><small>há 1 h</small></div></div><p>Alguém indica um café bom para trabalhar por aqui?</p><small>21 curtidas · 14 comentários</small></div><div class='post'><div class='w2'><div class='av' style='background:#b45309'>CD</div><div><b>Corrida de Domingo</b><br><small>Grupo · há 3 h</small></div></div><p>Treino confirmado às 7h, na praça central. Levem água!</p><small>73 curtidas · 9 comentários</small></div>",
+b:"<div class='sh'>Banco Horizonte <span class='tag'>Olá, Maria</span></div><div class='bal'><small>Saldo disponível</small><b>R$ 3.482,17</b></div><div class='acts'><span>Pix</span><span>Transferir</span><span>Pagar</span><span>Cartões</span></div><b>Últimas movimentações</b><div class='row'><span>Mercado Bom Preço</span><span class='neg'>− R$ 187,40</span></div><div class='row'><span>Salário</span><span class='pos'>+ R$ 4.200,00</span></div><div class='row'><span>Conta de luz</span><span class='neg'>− R$ 132,90</span></div><div class='row'><span>Pix recebido de Carlos</span><span class='pos'>+ R$ 50,00</span></div>",
+l:"<div class='sh'>Mercatto <span class='tag'>Categorias · Ofertas · Carrinho (2)</span></div><div class='promo'>Frete grátis em compras acima de R$ 199</div><div class='prods'><div class='prod'><i style='background:#93c5fd'></i><b>Fone Bluetooth</b>R$ 149,90<br><u>Comprar</u></div><div class='prod'><i style='background:#fcd34d'></i><b>Mochila urbana</b>R$ 119,00<br><u>Comprar</u></div><div class='prod'><i style='background:#86efac'></i><b>Garrafa térmica</b>R$ 59,90<br><u>Comprar</u></div></div>"};
+var cur=null,timer=null,$=function(i){return document.getElementById(i)};
+function worst(s){var o="g";s.cats.forEach(function(c){if(c.r=="r")o="r";else if(c.r=="y"&&o!="r")o="y"});return o}
+function step(n){[].forEach.call($("steps").children,function(li,i){li.className=i<=n?"on":""})}
+function pick(i){clearTimeout(timer);cur=SITES[i];tab="res";
+[].forEach.call($("pick").children,function(b,j){b.setAttribute("aria-pressed",j==i)});
+$("url").textContent=cur.url;$("pg").innerHTML=PAGES[cur.id];
+$("badge").textContent="…";$("badge").className="";$("toast").className="";$("view").className="view";
+step(0);timer=setTimeout(function(){step(1)},500);
+timer=setTimeout(function(){var w=worst(cur);var n=cur.cats.filter(function(c){return c.r!="g"}).length;
+$("badge").textContent=n;$("badge").className=w;
+$("tmsg").textContent=cur.alert;$("toast").className="show "+w;step(2);render()},1900)}
+var pro=false,tab="res",log=[],reqs=[],watch={s:1,b:1,l:1},applied={};
+var RIGHTS={share:["Saber com quem compartilharam meus dados","informação sobre as entidades públicas e privadas com as quais houve compartilhamento dos meus dados pessoais"],access:["Acessar os dados que o site tem sobre mim","confirmação da existência de tratamento e acesso aos meus dados pessoais"],del:["Excluir meus dados","a eliminação dos meus dados pessoais tratados com base no meu consentimento"],rev:["Revogar meu consentimento","a revogação do meu consentimento para o tratamento dos meus dados pessoais"],fix:["Corrigir meus dados","a correção de dados incompletos, inexatos ou desatualizados"]};
+var CHG={
+s:{cat:"Contatos",to:"r",d:"Vendidos a terceiros",o:"Os contatos sincronizados poderão ser cedidos a terceiros mediante contrapartida.",plain:"Seus contatos agora podem ser vendidos a outras empresas."},
+b:{cat:"Localização",to:"y",d:"Compartilhada com parceiros de ofertas",o:"A geolocalização poderá ser compartilhada com parceiros para ofertas personalizadas.",plain:"Seu local agora pode ser compartilhado com parceiros que fazem ofertas."},
+l:{cat:"E-mail",to:"r",d:"Vendido a terceiros",o:"O endereço eletrônico poderá ser cedido a terceiros mediante contrapartida.",plain:"Seu e-mail agora pode ser vendido a outras empresas."}};
+var NUM={"s|Localização":8,"l|E-mail":12};
+var LOCKS={
+dir:["Direitos da LGPD em um clique","Gera o pedido pronto para o encarregado de dados do site: saber com quem seus dados foram compartilhados, pedir exclusão ou revogar o consentimento.",["Modelo pronto, com os dados do site já preenchidos","Você escolhe o direito e as categorias de dados","Histórico dos pedidos que você fez"]],
+mud:["Monitor de mudanças","Relê a política dos sites que você acompanha e avisa quando algo muda, mostrando o antes e o depois em português simples.",["Aviso quando a política de um site muda","Antes e depois, sem juridiquês","Você escolhe quais sites acompanhar"]],
+ext:["Extrato de privacidade","Mostra o caminho dos seus dados: Você → Empresa → Terceiros, com o resumo dos sites que você visitou.",["O mapa do caminho dos dados","Quantas categorias saíram para terceiros","Resumo de todos os sites visitados"]]};
+function complete(){return !!(prof&&prof.nome&&prof.email)}
+function tabs(){var T=[["res","Resumo"],["dir","Direitos"],["mud","Mudanças"],["ext","Extrato"]];
+var b=T.map(function(t){return "<button type='button' role='tab' data-tab='"+t[0]+"' aria-selected='"+(tab==t[0])+"'>"+t[1]+"</button>"}).join("");
+if(pro)b+="<button type='button' role='tab' class='pbtn"+(complete()?"":" todo")+"' data-tab='perfil' aria-label='Meu perfil' title='Meu perfil' aria-selected='"+(tab=="perfil")+"'><svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21c1-4 4-6 8-6s7 2 8 6'/></svg></button>";
+return "<div class='tabs' role='tablist'>"+b+"</div>"}
+function lockV(k){var L=LOCKS[k];return "<div class='box'><h3 style='margin-top:0'>"+L[0]+"</h3><p class='plain'>"+L[1]+"</p><ul>"+L[2].map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul><button type='button' class='btn' data-act='trypro'>Experimentar o Pro (simulação)</button></div>"}
+function resumo(){var c={r:0,y:0,g:0};cur.cats.forEach(function(x){c[x.r]++});
+var h="<div class='chips'>";["r","y","g"].forEach(function(k){if(c[k])h+="<span class='chip "+k+"'>"+c[k]+" · "+LV[k]+"</span>"});
+h+="</div><h3>O que o site coleta</h3>";
+cur.cats.forEach(function(x){h+="<details><summary><span class='dot "+x.r+"'></span><b>"+x.n+"<small>"+x.d+"</small></b></summary><div class='q'><b>Texto original:</b> “"+x.o+"”</div><p class='plain'><b>Em português simples:</b> "+x.p+"</p></details>"});
+h+="<h3>Checagem da LGPD (estimativa)</h3>";var ic={ok:"✔",warn:"!",bad:"✖"};
+cur.lg.forEach(function(l){h+="<div class='lg'><span class='"+l[0]+"'>"+ic[l[0]]+"</span><div><b>"+l[1]+".</b> "+l[2]+"</div></div>"});
+return h+"<p class='note'>Resultado automático com base no texto da política. Pode errar e não substitui análise jurídica.</p>"}
+var prof=null,draft={email:"",cpf:""},subStep=0,flash="";
+function E(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function dirV(){var h="";
+if(flash){h+="<p class='note' role='status'>"+flash+"</p>";flash=""}
+h+="<p class='plain'>Gere o pedido pronto para o encarregado de dados de <b>"+cur.name+"</b>.</p>";
+h+=complete()?"<p class='who'>Pedido em nome de <b>"+E(prof.nome)+"</b> · <button type='button' class='lnk' data-act='goprof' style='background:none;border:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer;padding:0'>editar cadastro</button></p>":"<div class='box'><p class='plain' style='margin:0 0 4px'>Complete seu cadastro e o pedido já sai preenchido.</p><button type='button' class='btn' data-act='goprof'>Completar cadastro</button></div>";
+h+="<label class='lbl'>O que você quer pedir<select id='right'>"+Object.keys(RIGHTS).map(function(k){return "<option value='"+k+"'>"+RIGHTS[k][0]+"</option>"}).join("")+"</select></label>";
+h+="<fieldset><legend>Sobre quais dados</legend>"+cur.cats.filter(function(c){return c.r!="g"}).map(function(c){return "<label class='ck'><input type='checkbox' class='dc' value='"+c.n+"' checked> "+c.n+"</label>"}).join("")+"</fieldset>";
+h+="<details class='adj'><summary>Ajustes deste pedido</summary><label class='lbl'>E-mail que você usa neste site<input id='pe' type='email' placeholder='"+E(prof&&prof.email?prof.email:"mesmo do cadastro")+"' value=\""+E(draft.email)+"\"></label><p class='note'>Pode ser diferente do e-mail do cadastro.</p><label class='lbl'>CPF (só se o site exigir)<input id='pc' inputmode='numeric' value=\""+E(draft.cpf)+"\"></label><p class='note'>O CPF não é salvo no cadastro.</p></details>";
+h+="<p class='note'>Canal para exercer direitos neste site: "+cur.lg[2][2]+".</p>";
+h+="<label class='lbl'>Pedido (confira antes de enviar)<textarea id='req' rows='12'></textarea></label>";
+h+="<button type='button' class='btn' data-act='copy'>Copiar pedido</button><button type='button' class='btn alt' data-act='sent'>Marcar como enviado</button><span id='cm' class='note' aria-live='polite'></span>";
+h+="<p class='note'>O texto é um modelo e não substitui orientação jurídica.</p><h3>Seus pedidos</h3>";
+h+=reqs.length?reqs.map(function(r){return "<div class='chg'><b>"+r.what+"</b><br>"+r.site+" · aguardando resposta</div>"}).join(""):"<p class='note'>Nenhum pedido ainda.</p>";return h}
+function upd(){var r=RIGHTS[$("right").value],cs=[].filter.call(document.querySelectorAll(".dc"),function(x){return x.checked}).map(function(x){return x.value});
+draft.email=$("pe").value;draft.cpf=$("pc").value;
+var nome=(prof&&prof.nome)||"[seu nome completo]",cid=(prof&&prof.cidade)||"[cidade]",cpf=draft.cpf.trim(),em=draft.email.trim()||(prof&&prof.email)||"[e-mail que você usa neste site]";
+$("req").value="Assunto: Solicitação de titular de dados (Art. 18 da LGPD)\n\nÀ/Ao Encarregado de Dados de "+cur.name+",\n\nEu, "+nome+(cpf?", inscrito(a) no CPF "+cpf:"")+", titular de dados pessoais, com base no Art. 18 da Lei nº 13.709/2018 (LGPD), solicito "+r[1]+".\n\nO pedido se refere a estes dados: "+(cs.length?cs.join(", "):"[indique os dados]")+".\n\nPara localizar meu cadastro, informo o e-mail "+em+".\n\nPeço resposta por este mesmo canal.\n\n"+cid+", [data].\n\n"+nome}
+function perfilV(){var q=prof||{nome:"",email:"",cidade:""};
+return "<h3 style='margin-top:0'>Meu cadastro de titular</h3><p class='plain'>Serve só para preencher seus pedidos. Fica guardado neste navegador: o ClearTrace não recebe esses dados.</p><button type='button' class='btn alt' data-act='pgoogle'>Preencher com minha conta Google (simulado)</button><label class='lbl'>Nome completo<input id='fn' autocomplete='off' value=\""+E(q.nome)+"\"></label><label class='lbl'>E-mail<input id='fe' type='email' value=\""+E(q.email)+"\"></label><label class='lbl'>Cidade<input id='fc' value=\""+E(q.cidade)+"\"></label><p class='note'>O CPF não é salvo. Você informa só se um site exigir, nos ajustes do pedido.</p><button type='button' class='btn' data-act='psave'>Salvar cadastro</button>"+(prof?"<button type='button' class='btn alt' data-act='pdel'>Apagar meu cadastro</button>":"")}
+function showModal(){var m=$("mbox"),h;
+if(subStep==1)h="<h2 id='mt'>Assinar o ClearTrace Pro</h2><ul><li>Direitos da LGPD em um clique</li><li>Monitor de mudanças</li><li>Extrato de privacidade</li></ul><p class='plain'>Valor: <b>R$ 4,99</b>. O alerta automático continua gratuito.</p><p class='note'>Nesta simulação ninguém é cobrado. Na versão real, o pagamento passaria por um processador de pagamento, e o ClearTrace não guardaria dados de cartão.</p><button type='button' class='btn' data-m='pay'>Simular pagamento</button><button type='button' class='btn alt' data-m='cancel'>Cancelar</button>";
+else h="<h2 id='mt'>Monte seu perfil de titular</h2><p class='plain'>Opcional. Serve só para preencher seus pedidos da LGPD e fica guardado neste navegador: o ClearTrace não recebe esses dados.</p><button type='button' class='btn alt' data-m='google'>Preencher com minha conta Google (simulado)</button><label class='lbl'>Nome completo<input id='mn'></label><label class='lbl'>E-mail<input id='me' type='email'></label><label class='lbl'>Cidade<input id='mc'></label><p class='note'>O CPF não é pedido agora. Você informa só se um site exigir, na hora do pedido.</p><button type='button' class='btn' data-m='save'>Salvar no meu navegador</button><button type='button' class='btn alt' data-m='skip'>Pular por enquanto</button>";
+m.innerHTML=h;$("modal").hidden=false;
+if(subStep==2&&prof){$("mn").value=prof.nome;$("me").value=prof.email;$("mc").value=prof.cidade}
+m.querySelector("button").focus()}
+function startSub(){subStep=1;showModal()}
+function closeModal(){$("modal").hidden=true;subStep=0;if(!pro)$("pro").checked=false;$("pro").focus()}
+function finish(){pro=true;subStep=0;$("pro").checked=true;$("modal").hidden=true;if(cur&&$("badge").textContent!="…"){tab="dir";openPanel();render()}$("pro").focus()}
+function mudV(){var h="<p class='plain'>O ClearTrace relê a política dos sites que você acompanha e avisa quando algo muda.</p><h3>Sites acompanhados</h3>";
+h+=SITES.map(function(s){return "<label class='ck'><input type='checkbox' data-w='"+s.id+"'"+(watch[s.id]?" checked":"")+"> "+s.name+"</label>"}).join("");
+h+="<button type='button' class='btn' data-act='sim'"+(applied[cur.id]||!watch[cur.id]?" disabled":"")+">Simular mudança na política deste site</button>";
+if(!watch[cur.id])h+="<p class='note'>Ative o acompanhamento deste site para receber o aviso.</p>";
+h+="<h3>Mudanças detectadas</h3>";
+h+=log.length?log.map(function(l){return "<div class='chg'><b>"+l.site+"</b> · "+l.cat+"<br><span class='chip "+l.from+"'>"+LV[l.from]+"</span> → <span class='chip "+l.to+"'>"+LV[l.to]+"</span><p class='plain'>"+l.plain+"</p></div>"}).join(""):"<p class='note'>Nenhuma mudança detectada ainda.</p>";return h}
+function extV(){var t=0,c={r:0,y:0,g:0};
+var fl=SITES.map(function(s){var li="",g=[];s.cats.forEach(function(x){c[x.r]++;if(x.r=="g")g.push(x.n);else{t++;var n=NUM[s.id+"|"+x.n];li+="<li><span class='dot "+x.r+"'></span><span>"+x.n+": "+(x.r=="r"?"vendido a compradores de dados":"compartilhado com parceiros"+(n?" ("+n+")":""))+"</span></li>"}});
+if(g.length)li+="<li><span class='dot g'></span><span>Uso interno: "+g.join(", ")+"</span></li>";
+return "<div class='box flow'><div class='fl'><span>Você</span><span>→</span><b>"+s.name+"</b><span>→</span></div><ul>"+li+"</ul></div>"}).join("");
+var h="<p class='plain'>Extrato do mês (simulado): o caminho dos seus dados depois de passar pelos sites.</p><p class='plain'><b>"+t+" categorias</b> de dados suas chegaram a empresas de fora do site.</p><div class='chips'>";
+["r","y","g"].forEach(function(k){h+="<span class='chip "+k+"'>"+c[k]+" · "+LV[k]+"</span>"});return h+"</div>"+fl}
+function render(){var h="<h2>"+cur.name+"</h2>"+tabs()+"<div role='tabpanel'>";
+if(tab=="res")h+=resumo();else if(!pro)h+=lockV(tab);else h+=({dir:dirV,mud:mudV,ext:extV,perfil:perfilV})[tab]();
+$("panel").innerHTML=h+"</div>";if(tab=="dir"&&pro)upd()}
+function refresh(){var w=worst(cur);$("badge").textContent=cur.cats.filter(function(c){return c.r!="g"}).length;$("badge").className=w;return w}
+function simulate(){var c=CHG[cur.id],cat=cur.cats.filter(function(x){return x.n==c.cat})[0],from=cat.r;
+cat.r=c.to;cat.d=c.d;cat.o=c.o;cat.p=c.plain;log.unshift({site:cur.name,cat:c.cat,from:from,to:c.to,plain:c.plain});applied[cur.id]=1;
+var w=refresh();$("tmsg").textContent="A política mudou: "+c.plain;$("toast").className="show "+w;render()}
+function openPanel(){if(!cur||$("badge").textContent=="…")return;$("view").className="view open";step(3);$("toast").className=""}
+SITES.forEach(function(s,i){var b=document.createElement("button");b.type="button";b.textContent=s.name;b.onclick=function(){pick(i)};$("pick").appendChild(b)});
+$("ext").onclick=function(){$("view").classList.contains("open")?($("view").className="view"):openPanel()};
+$("tmore").onclick=openPanel;$("toast").onclick=function(e){if(e.target.closest("button"))return;openPanel()};$("tclose").onclick=function(){$("toast").className=""};
+$("pro").onchange=function(){if(this.checked){if(!pro)startSub()}else{pro=false;if(tab=="perfil")tab="res";if(cur&&$("badge").textContent!="…")render()}};
+$("modal").onclick=function(e){var b=e.target.closest("[data-m]");if(!b)return;var a=b.dataset.m;
+if(a=="cancel")closeModal();
+else if(a=="pay"){subStep=2;showModal()}
+else if(a=="google"){$("mn").value="Maria Exemplo";$("me").value="maria.exemplo@email.com"}
+else if(a=="save"){prof={nome:$("mn").value.trim(),email:$("me").value.trim(),cidade:$("mc").value.trim()};draft={email:"",cpf:""};finish()}
+else if(a=="skip")finish()};
+document.onkeydown=function(e){if(e.key=="Escape"&&!$("modal").hidden){subStep==2?finish():closeModal()}};
+$("panel").oninput=function(e){if(/^p(e|c)$/.test(e.target.id))upd()};
+$("panel").onclick=function(e){var b=e.target.closest("[data-tab],[data-act]");if(!b)return;
+if(b.dataset.tab){tab=b.dataset.tab;render();return}
+var a=b.dataset.act;
+if(a=="trypro")startSub();
+else if(a=="goprof"){tab="perfil";render()}
+else if(a=="pgoogle"){$("fn").value="Maria Exemplo";$("fe").value="maria.exemplo@email.com"}
+else if(a=="psave"){prof={nome:$("fn").value.trim(),email:$("fe").value.trim(),cidade:$("fc").value.trim()};draft={email:"",cpf:""};flash="Cadastro salvo neste navegador.";tab="dir";render()}
+else if(a=="pdel"){prof=null;draft={email:"",cpf:""};render()}
+else if(a=="copy"){var t=$("req").value;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){$("cm").textContent="Pedido copiado."}).catch(function(){$("req").select();$("cm").textContent="Selecione o texto e copie."})}
+else if(a=="sent"){reqs.unshift({site:cur.name,what:RIGHTS[$("right").value][0]});render()}
+else if(a=="sim")simulate()};
+$("panel").onchange=function(e){var t=e.target;if(t.dataset.w!==undefined){watch[t.dataset.w]=t.checked?1:0;render()}else if(t.id=="right"||t.className=="dc")upd()};
+pick(0);
+</script>
+</body>
+</html>
